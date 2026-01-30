@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Install Story Templates</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .bookmarklet-box {
+            background: linear-gradient(135deg, #fff9e6, #fffaed);
+            border: 3px dashed #ffa726;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .bookmarklet-box h2 {
+            color: #e65100;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .bookmarklet-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 18px 36px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+            box-shadow: 0 6px 20px rgba(26, 115, 232, 0.4);
+            margin: 15px 0;
+            cursor: move;
+            transition: all 0.3s;
+        }
+
+        .bookmarklet-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(26, 115, 232, 0.5);
+        }
+
+        .instruction-text {
+            color: #666;
+            font-size: 15px;
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+
+        .steps {
+            margin: 30px 0;
+        }
+
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #1a73e8;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #1a73e8;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 32px;
+            font-weight: 700;
+            margin-right: 12px;
+            font-size: 16px;
+        }
+
+        .step-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .step-description {
+            color: #666;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        .demo-video {
+            background: #000;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            color: white;
+        }
+
+        .success-message {
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #155724;
+        }
+
+        .success-message h3 {
+            margin-bottom: 10px;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .device-support {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .device {
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .device-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .device-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .device-status {
+            font-size: 13px;
+            color: #28a745;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .bookmarklet-link {
+                font-size: 16px;
+                padding: 14px 28px;
+            }
+
+            .device-support {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Story Template Helper</h1>
+            <p>Install the bookmarklet in seconds - works on all devices!</p>
+        </div>
+
+        <div class="content">
+            <div class="bookmarklet-box">
+                <h2>👇 Drag This Button to Your Bookmarks Bar</h2>
+                
+                <!-- IMPORTANT: Change the URL below to YOUR server URL -->
+                <a href="javascript:(function(){var s=document.createElement('script');s.src='https://YOUR_SERVER_URL/template-loader.js?v='+Date.now();document.body.appendChild(s);})();" 
+                   class="bookmarklet-link">
+                    📝 Story Templates
+                </a>
+                
+                <p class="instruction-text">
+                    <strong>Desktop:</strong> Drag the button above to your bookmarks bar<br>
+                    <strong>Mobile:</strong> Tap and hold, then add to bookmarks
+                </p>
+            </div>
+
+            <div class="steps">
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <div style="display: inline-block; vertical-align: top; width: calc(100% - 50px);">
+                        <div class="step-title">Save the Bookmark</div>
+                        <div class="step-description">
+                            Drag the blue "📝 Story Templates" button to your bookmarks bar. On mobile, tap and hold the button, then select "Add to Bookmarks"
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <div style="display: inline-block; vertical-align: top; width: calc(100% - 50px);">
+                        <div class="step-title">Go to NetSuite</div>
+                        <div class="step-description">
+                            Open NetSuite and navigate to any page where you enter story descriptions
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <div style="display: inline-block; vertical-align: top; width: calc(100% - 50px);">
+                        <div class="step-title">Click the Bookmark</div>
+                        <div class="step-description">
+                            Tap the "📝 Story Templates" bookmark you just saved. A panel will appear with all available templates
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <div style="display: inline-block; vertical-align: top; width: calc(100% - 50px);">
+                        <div class="step-title">Search & Select</div>
+                        <div class="step-description">
+                            Search for your template (e.g., "air leak"), click on it, and it automatically inserts into the text field!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="success-message">
+                <h3>✅ That's it - you're ready to go!</h3>
+                <p>Use the bookmark anytime you're on NetSuite to quickly insert story templates. New templates are added regularly and will appear automatically.</p>
+            </div>
+
+            <h3 style="margin: 30px 0 20px 0; text-align: center;">Device Support</h3>
+            <div class="device-support">
+                <div class="device">
+                    <div class="device-icon">💻</div>
+                    <div class="device-name">Desktop</div>
+                    <div class="device-status">✓ Fully Supported</div>
+                </div>
+                <div class="device">
+                    <div class="device-icon">📱</div>
+                    <div class="device-name">Samsung Tablet</div>
+                    <div class="device-status">✓ Fully Supported</div>
+                </div>
+                <div class="device">
+                    <div class="device-icon">📱</div>
+                    <div class="device-name">iPad</div>
+                    <div class="device-status">✓ Use Chrome/Edge</div>
+                </div>
+                <div class="device">
+                    <div class="device-icon">🖥️</div>
+                    <div class="device-name">All Browsers</div>
+                    <div class="device-status">✓ Chrome, Edge, Firefox</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>Need help?</strong> Contact your IT department or email support</p>
+            <p style="margin-top: 10px; font-size: 12px; color: #999;">
+                Story Template Helper v2.0 • Copyright © 2026 Christopher Martinez
+            </p>
+        </div>
+    </div>
+</body>
+</html>
