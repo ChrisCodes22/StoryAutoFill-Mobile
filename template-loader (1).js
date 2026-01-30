@@ -11,7 +11,7 @@
     
     // Configuration
     const CONFIG = {
-        templatesURL: 'https://yourserver.com/templates.json', // CHANGE THIS to your server URL
+        templatesURL: 'https://chriscodes22.github.io/StoryAutoFill-Mobile/templates.json',
         cacheKey: 'stl_templates_cache',
         cacheExpiry: 3600000, // 1 hour in milliseconds
         version: '2.0.0'
