@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <!-- Background -->
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a73e8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d47a1;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Rounded square background -->
+  <rect width="192" height="192" rx="42" fill="url(#grad)"/>
+  
+  <!-- Document icon -->
+  <g transform="translate(48, 38)">
+    <!-- Paper -->
+    <rect x="0" y="0" width="96" height="120" rx="8" fill="white" opacity="0.95"/>
+    
+    <!-- Folded corner -->
+    <path d="M 76 0 L 96 20 L 76 20 Z" fill="#e8eaed"/>
+    
+    <!-- Lines representing text -->
+    <rect x="16" y="35" width="64" height="6" rx="3" fill="#1a73e8" opacity="0.7"/>
+    <rect x="16" y="50" width="52" height="6" rx="3" fill="#1a73e8" opacity="0.5"/>
+    <rect x="16" y="65" width="60" height="6" rx="3" fill="#1a73e8" opacity="0.5"/>
+    <rect x="16" y="80" width="48" height="6" rx="3" fill="#1a73e8" opacity="0.5"/>
+    <rect x="16" y="95" width="56" height="6" rx="3" fill="#1a73e8" opacity="0.5"/>
+  </g>
+  
+  <!-- Small wrench icon (for vehicle repair) -->
+  <g transform="translate(136, 136) scale(0.7)">
+    <path d="M 0 -20 L 6 -14 L -8 8 L -14 2 Z" fill="#ffd700" stroke="#f9a825" stroke-width="1"/>
+    <circle cx="-10" cy="4" r="3" fill="#f9a825"/>
+  </g>
+</svg>
