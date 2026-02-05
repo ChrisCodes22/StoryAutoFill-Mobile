@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Story Template Helper - Mobile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 40px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .search-box {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f8f9fa;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+
+        .templates-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .template-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-item:active {
+            transform: scale(0.98);
+            background: #f0f7ff;
+        }
+
+        .template-title {
+            font-weight: 600;
+            color: #1a73e8;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .template-preview {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .template-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+        }
+
+        .keyword-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .no-results-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        /* Modal for viewing/copying template */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translate(-50%, -45%);
+            }
+            to { 
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .template-full-text {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #1a73e8;
+            color: white;
+        }
+
+        .btn-primary:active {
+            background: #1557b0;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-secondary:active {
+            background: #e0e0e0;
+        }
+
+        .copy-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2e7d32;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 2000;
+        }
+
+        .copy-notification.show {
+            opacity: 1;
+        }
+
+        .stats {
+            text-align: center;
+            padding: 10px;
+            color: #666;
+            font-size: 13px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        /* Scrollbar styling */
+        .templates-list::-webkit-scrollbar,
+        .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .templates-list::-webkit-scrollbar-track,
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .templates-list::-webkit-scrollbar-thumb,
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .templates-list::-webkit-scrollbar-thumb:hover,
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Story Template Helper</h1>
+            <p>Search and copy templates instantly</p>
+        </div>
+
+        <div class="search-box">
+            <input 
+                type="text" 
+                class="search-input" 
+                id="searchInput" 
+                placeholder="Search templates... (e.g., 'air leak', 'paint', 'door')"
+                autocomplete="off"
+            >
+        </div>
+
+        <div class="templates-list" id="templatesList">
+            <!-- Templates will be inserted here -->
+        </div>
+
+        <div class="stats" id="stats">
+            Loading templates...
+        </div>
+    </div>
+
+    <!-- Modal for viewing template -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle"></div>
+            </div>
+            <div class="modal-body">
+                <div class="template-full-text" id="modalText"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="copyBtn">📋 Copy Template</button>
+                <button class="btn btn-secondary" id="closeBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copy notification -->
+    <div class="copy-notification" id="copyNotification">
+        ✓ Template copied to clipboard!
+    </div>
+
+    <script>
+        // ========================================
+        // LICENSE VALIDATION SYSTEM
+        // ========================================
+        
+        const LICENSE_CONFIG = {
+            storageKey: 'stl_mobile_license',
+            lastValidation: 'stl_mobile_last_check'
+        };
+
+        function encryptKey(key) {
+            return btoa(key.split('').reverse().join(''));
+        }
+
+        function decryptKey(encrypted) {
+            try {
+                return atob(encrypted).split('').reverse().join('');
+            } catch {
+                return null;
+            }
+        }
+
+        function validateLicenseKey(key) {
+            if (!key || typeof key !== 'string') {
+                return { valid: false, reason: 'Invalid key format' };
+            }
+            const cleanKey = key.replace(/-/g, '');
+            if (!/^[A-Z0-9]{20}$/i.test(cleanKey)) {
+                return { valid: false, reason: 'Invalid key format' };
+            }
+            try {
+                const decoded = atob(cleanKey);
+                const [userId, expiryStr] = decoded.split(':');
+                const expiryDate = new Date(expiryStr);
+                const now = new Date();
+                if (expiryDate < now) {
+                    return { valid: false, reason: 'License expired', expiry: expiryDate, userId: userId };
+                }
+                return { valid: true, userId: userId, expiry: expiryDate };
+            } catch (e) {
+                return { valid: false, reason: 'Invalid key data' };
+            }
+        }
+
+        function storeLicense(key) {
+            try {
+                localStorage.setItem(LICENSE_CONFIG.storageKey, encryptKey(key));
+                localStorage.setItem(LICENSE_CONFIG.lastValidation, Date.now().toString());
+                return true;
+            } catch (e) {
+                console.error('Failed to store license:', e);
+                return false;
+            }
+        }
+
+        function getStoredLicense() {
+            try {
+                const encrypted = localStorage.getItem(LICENSE_CONFIG.storageKey);
+                if (!encrypted) return null;
+                return decryptKey(encrypted);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function showLicenseModal(message = 'Please enter your license key to use Story Template Helper') {
+            const modal = document.createElement('div');
+            modal.id = 'license-modal';
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.8); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            `;
+            modal.innerHTML = `
+                <div style="background: white; padding: 30px; border-radius: 12px; max-width: 400px; width: 90%;">
+                    <h2 style="margin: 0 0 10px 0; color: #333; font-size: 22px;">🔐 License Required</h2>
+                    <p style="color: #666; margin: 0 0 20px 0; font-size: 14px;">${message}</p>
+                    <input type="text" id="license-key-input" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" 
+                        style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px;
+                        font-size: 14px; font-family: 'Courier New', monospace; text-transform: uppercase;
+                        margin-bottom: 10px;" maxlength="24" />
+                    <div id="license-error" style="color: #dc3545; font-size: 13px; margin-bottom: 15px; display: none;"></div>
+                    <button id="license-submit-btn" style="width: 100%; padding: 12px; background: #1a73e8; 
+                        color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                        Activate License
+                    </button>
+                    <p style="margin: 20px 0 0 0; padding-top: 20px; border-top: 1px solid #eee; 
+                        color: #999; font-size: 12px; text-align: center;">
+                        Contact your administrator for a license key
+                    </p>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            const input = document.getElementById('license-key-input');
+            const submitBtn = document.getElementById('license-submit-btn');
+            const errorDiv = document.getElementById('license-error');
+
+            // Auto-format input
+            input.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+                if (value.length > 20) value = value.substring(0, 20);
+                let formatted = '';
+                for (let i = 0; i < value.length; i++) {
+                    if (i > 0 && i % 5 === 0) formatted += '-';
+                    formatted += value[i];
+                }
+                e.target.value = formatted;
+                e.target.style.borderColor = '#ddd';
+                errorDiv.style.display = 'none';
+            });
+
+            submitBtn.addEventListener('click', () => {
+                const key = input.value.replace(/-/g, '');
+                const validation = validateLicenseKey(key);
+                
+                if (validation.valid) {
+                    if (storeLicense(input.value)) {
+                        modal.remove();
+                        initializeApp();
+                    } else {
+                        errorDiv.textContent = '❌ Failed to store license';
+                        errorDiv.style.display = 'block';
+                    }
+                } else {
+                    errorDiv.textContent = `❌ ${validation.reason}`;
+                    errorDiv.style.display = 'block';
+                    input.style.borderColor = '#dc3545';
+                }
+            });
+
+            input.focus();
+        }
+
+        function checkLicense() {
+            const storedKey = getStoredLicense();
+            
+            if (!storedKey) {
+                showLicenseModal();
+                return false;
+            }
+
+            const validation = validateLicenseKey(storedKey);
+            
+            if (!validation.valid) {
+                if (validation.reason === 'License expired') {
+                    showLicenseModal(`Your license expired on ${validation.expiry.toLocaleDateString()}. Please renew your subscription.`);
+                } else {
+                    showLicenseModal('Your license key is invalid. Please enter a valid key.');
+                }
+                return false;
+            }
+
+            console.log('[Story Template] Licensed to:', validation.userId, 'Expires:', validation.expiry.toLocaleDateString());
+            return true;
+        }
+
+        // ========================================
+        // MAIN APPLICATION CODE
+        // ========================================
+        
+        // Template data (same as Chrome extension)
+        const templates = [
+            { title: "ACORN NUTS", keywords: ["ACORN", "NUTS"], body: "CAUSE:\n-PAINT NOT PROTECTED FROM FACTORY\nCORRECTION:\n-REMOVED ACORN NUTS\n-SANDED DOWN TO BARE METAL\n-PRIMED AND SET TO DRY\n-REPAINTED AND SET TO DRY\n-REVERSE INSTALLED" },
+            { title: "SILVER TRIMS", keywords: ["SILVER", "TRIMS"], body: "CAUSE:\n-EDGES NOT GRINDED DOWN FROM FACTORY\n-CORRECTION:\n-REMOVED SILVER TRIMS\n-PLACED TRIMS IN VICE\n-USED GRINDER TO SMOOTH OUT SHARP EDGES\n-REVERSE INSTALLED" },
+            { title: "INTAKE PANEL", keywords: ["INTAKE", "PANEL"], body: "CAUSE:\n-PAINT DAMAGED FROM FACTORY\nCORRECTION:\n-REMOVED SCREWS SECURING PANEL\n-REMOVED VENT\n-REMOVED SILVER HANDLE\n-SANDED DOWN PANEL TO BARE METAL\n-PRIMED AND SET TO DRY\n-REPAINTED AND SET TO DRY\n-REVERSE INSTALLED" },
+            { title: "BLACK TRIMS", keywords: ["BLACK", "TRIMS"], body: "CAUSE:\n-PAINT DAMAGE FROM FACTORY\nCORRECTION:\n-REMOVED SCREWS SECURING TRIMS\n-SANDED DOWN TRIMS TO BARE METAL\n-PRIMED AND SET TO DRY\n-REPAINTED AND SET TO DRY\n-REVERSE INSTALLED" },
+            { title: "ENTRY HANDLES", keywords: ["ENTRY", "HANDLES", "HANDLE"], body: "CAUSE:\n-SCUFFED WHEN INSTALLED\nCORRECTION:\n-REMOVED 4 SCREWS SECURING HANDLE\n-PLACED HANDLE IN VICE\n-USED A SCUFF PAD TO SAFELY GRIND DOWN ALL SHARP GROOVES\n-REPEATED PROCESS FOR SECOND HANDLE\n-REVERSE INSTALLED" },
+            { title: "AIR LEAK PLUG", keywords: ["AIR", "LEAK", "PLUG"], body: "CAUSE\n-NOT ENOUGH THREAD SEALENT APPLIED FROM FACTORY\nCORRECTION:\n-EMPTIED CORRESPONDING AIR TANK\n-REMOVED PLUG FROM TANK\n-CLEANED THREADS\n-APPLIED HIGH TEMP SEALENT ON THREADS\n-REVERSE INSTALLED PLUG\n-TESTED FOR LEAKS" },
+            { title: "AIR LEAK LINE", keywords: ["AIR", "LEAK", "LINE"], body: "CAUSE\n-NOT ENOUGH THREAD SEALENT APPLIED FROM FACTORY\nCORRECTION:\n-EMPTIED CORRESPONDING AIR TANK\n-DISCONNECTED AIR LINE FROM FITTING\n-CUT END OF LINE FLUSH TO PROVIDE BEST CONNECTION TO COUPLER\n-REMOVED FITTING\n-CLEANED THREADS\n-APPLIED THREAD SEALENT\n-REVERSE INSTALLED AND LEAK TESTED" },
+            { title: "ACCESSORY VALVE LEAK", keywords: ["ACCESSORY", "VALVE", "LEAK"], body: "CAUSE\n-NOT ENOUGH THREAD SEALENT APPLIED FROM FACTORY\nCORRECTION:\n-EMPTIED AIR TANK\n-REMOVED AIR LINES GOING TO VALVE\n-REMOVED 2 BOLTS SECURING ACCESSORY VALVE\n-REMOVED ALL 7 FITTING ON VALVE\n-CLEANED THREADS AND APPLIED NEW THREAD SEALENT\n-CUT END OF LINE FLUSH TO PROVIDE BEST CONNECTION TO COUPLER\n-REVERSE INSTALLED AIR LINES AND LEAK TESTED" },
+            { title: "AIR HORN PEDAL LEAK", keywords: ["AIR HORN", "PEDAL", "LEAK"], body: "CAUSE\n-NOT ENOUGH THREAD SEALENT APPLIED FROM FACTORY\nCORRECTION:\n-EMPTIED AIR TANK\n-REMOVED 4 SCREWS SECURING PEDAL\n-REMOVED FITTING FROM PEDAL VALVE\n-CLEANED THREADS AND APPLIED NEW THREAD SEALENT\n-CUT END OF LINE FLUSH TO PROVIDE BEST CONNECTION TO COUPLER\n-REVERSE INSTALLED AND LEAK TESTED" },
+            { title: "REFLECTIVE TAPE PEELING", keywords: ["REFLECTIVE", "TAPE", "PEELING"], body: "CAUSE:\n-AREA NOT CLEANED BEFORE INSTALLED\nCORRECTION:\n-APPLIED HEAT TO DECAL TO REMOVE WITHOUT DAMAGING PAINT\n-CLEANED AREA WITH ALCOHOL TO REMOVE RESIDUE\n-REAPPLIED #FT OF NEW TAPE AND SET TO CURE" },
+            { title: "SEAT BOLTS", keywords: ["SEAT", "BOLTS"], body: "CAUSE:\n-BOLT HOLES NOT DRILLED STRAIGHT FROM FACTORY NOT ALLOWING BOLT TO SIT LEVEL\n-CORRECTION:\n-REMOVED SEAT BOLT\n-PRE DRILLED HOLE TO ALIGN BOLT STRAIGHT\n-REVERSE INSTALLED AND TORQUED TO SPEC\n-REPEAT PROCESS FOR # OF BOLTS" },
+            { title: "WINDOWS NOT CLEARING 12INCHES", keywords: ["WINDOWS", "NOT", "CLEARING", "12INCHES"], body: "CAUSE:\n-WINDOW STOPPERS NOT ALLOWING WINDOW TO GO DOWN FAR ENOUGH\nCORRECTION:\n-DRILLED CENTER OF STOPPER\n-USED CHISEL TO REMOVE CENTER RIVET ROD\n-APPLIED SEALENT TO FILL HOLE PROVIDING PROPER WEATHER SEAL\n-REPEAT PROCESS FOR OTHER SIDE OF WINDOW\n-REPEAT PROCESS FOR ALL WINDOWS" },
+            { title: "VENTS HARD TO SWIVEL", keywords: ["VENTS", "HARD", "SWIVEL"], body: "CAUSE:\n-EXCESS PLASTIC FROM MOLDING PROCESS NOT ALLOWING VENT TO SWIVEL EASILY\nCORRECTION:\n-REMOVED VENT FROM VEHICLE\n-USED A SMALL FILE TO REMOVE EXCESS PLASTIC FROM SWIVEL AREA\n-REVERSE INSTALLED" },
+            { title: "DAYLIGHT DOOR", keywords: ["DAYLIGHT", "E DOOR"], body: "CAUSE:\n-WEATHER STRIP FROM FACTORY TOO THIN\nCORRECTION:\n-REMOVED OLD WEATHER STRIP\n-CLEANED AREA WITH ALCOHOL TO REMOVE RESIDUE\n-APPLIED NEW WEATHER STRIP AND SET TO CURE" },
+            { title: "FLIP SEAT SHOCKS", keywords: ["FLIP", "SEAT", "SHOCKS"], body: "CAUSE:\n-EXCESS THREAD ON SHOCK BOLT\nCORRECTION:\n-REMOVED SHOCK FROM SEAT\n-CUT EXCESS THREAD TO ALLOW PROPER FITMENT\n-REVERSE INSTALLED" },
+            { title: "ENTRY STEP EXCEEDS 17INCHES", keywords: ["ENTRY STEP", "EXCEEDS", "17INCHES"], body: "CAUSE:\n-SPACERS TOO THICK FROM FACTORY\nCORRECTION:\n-LIFTED VEHICLE USING COLUMN LIFTS\n-USED JACKS TO SUPPORT CHASSIS RELIEVING PRESSURE FROM SUSPENSION\n-REMOVED 4 U BOLTS SECURING ONE SIDE OF AXLE\n-REMOVED SPACERS AND REVERSE INSTALLED SHORTER ONES\n-LOWERED AXLE BACK INTO PLACE\n-REVERSE INSTALLED NEW U BOLTS ALONG WITH NEW HARDWARE\n-REPEAT PROCESS FOR OTHER SIDE\n-ALLOWED VEHICLE TO SETTLE\n-TORQUED U BOLTS TO SPEC\n-MEASURED ENTRY STEP TO VERIFY" },
+            { title: "STEP LIGHTS SCRATCHED", keywords: ["STEP", "LIGHTS", "SCRATCHED"], body: "CAUSE:\n-DAMAGED FROM FACTORY\nCORRECTION:\n-REMOVED STEP LIGHT\n-REVERSE INSTALLED NEW STEP LIGHT" },
+            { title: "BRAKE LINE LEAKING", keywords: ["BRAKE", "LINE LEAKING", "LEAKING"], body: "CAUSE:\n-IMPROPER INSTALLATION FROM FACTORY\nCORRECTION:\n-REMOVED BRAKE LINE\n-CLEANED THREADS\n-APPLIED HIGH TEMP THREAD SEALENT\n-REVERSE INSTALLED AND LEAK TESTED" },
+            { title: "E DOOR DOESNT MEET 12INCH REQUIREMENT", keywords: ["E DOOR", "NOT CLEARING", "12INCHES"], body: "CAUSE:\n-SEAT INSTALLED TOO FAR BACK\n-CORRECTION:\n-REMOVED SEAT BOLTS SECURING SEAT TO FLOOR\n-REMOVED BOTH SIDE BOLTS ON GUSSET TRIM\n-ONCE SEAT REMOVED MARKED HOLE LOCATIONS 1INCH FORWARD\n-PRE DRILLED NEW HOLES\n-REVERSE INSTALLED SEAT AND TORQUED TO SPEC\n-REPEAT PROCESS FOR OTHER SIDE BOLTS\n-REPEAT PROCESS FOR GUSSET TRIM BOLTS\n-MEASURED E DOOR TO VERIFY\n-APPLIED SEALENT TO FILL OLD HOLE LOCATIONS" },
+            { title: "PEDAL ADJUSTER LINE KINKED", keywords: ["PEDAL", "ADJUSTER", "KINKED"], body: "CAUSE:\n-IMPROPER INSTALLATION FROM FACTORY\nCORRECTION:\n-REMOVED PEDAL ADJUSTER LINE\n-ROUTED LINE PROPERLY\n-SECURED LINE ON BOTH ENDS USING P CLAMPS TO PREVENT LINE FROM KINKING AGAIN" },
+            { title: "DRIVERS TOE AREA MISSING SILICONE", keywords: ["DRIVERS", "TOE AREA", "SILICONE"], body: "CAUSE:\n-NOT INSTALLED FROM FACTORY\n-CORRECTION:\n-CLEANED AREA WITH ALCOHOL TO REMOVE DIRT AND RESIDUE\n-APPLIED SILICONE TO TOE AREA\n-SET TO CURE" },
+            { title: "SLOPPY SILICONE BEHIND TRIANGLE KIT", keywords: ["SLOPPY", "SILICONE", "TRIANGLE KIT"], body: "CAUSE:\nSLOPPY SILICONE FROM FACTORY\nCORRECTION:\nREMOVED TRIANGLE KIT\n-REMOVED SLOPPY SILICONE USING PLASTIC SCRAPER\n-CLEANED AREA WITH ALCOHOL TO REMOVE RESIDUE\n-REAPPLIED SILICONE NEATLY AROUND TRIANGLE KIT\n-SET TO CURE" },
+            { title: "SEAT BARRIER LEGS PAINT DAMAGE", keywords: ["SEAT BARRIER", "LEGS", "PAINT DAMAGE"], body: "CAUSE:\n-PAINT DAMAGED FROM FACTORY\nCORRECTION:\n-MASKED OFF AREA TO PREVENT OVERSPRAY\n-SANDED DOWN TO BARE METAL\n-PRIMED AND SET TO DRY\n-REPAINTED AND SET TO DRY" },
+            { title: "WHEEL WELL COVER LIFTING", keywords: ["WHEEL WELL", "COVER", "LIFTING"], body: "CAUSE:\n-DEBRIS UNDER WHEEL WELL COVER\nCORRECTION:\n-REMOVED WHEEL WELL COVER\n-CLEANED AREA TO REMOVE DEBRIS\n-APPLIED ADHESIVE TO SECURE COVER\n-REVERSE INSTALLED AND SET TO CURE" },
+            { title: "DAVENPORT KICK PANEL DAMAGED", keywords: ["DAVENPORT", "KICK PLATE", "DAMAGED"], body: "CAUSE:\n-DAMAGED FROM FACTORY\nCORRECTION:\n-REMOVED 6 SCREWS SECURING KICK PANEL\n- ALIGNED NEW KICK PANEL\n-REVERSE INSTALLED" },
+            { title: "WIRE CHANNELS FALLING OFF", keywords: ["WIRE", "CHANNEL", "FALLING"], body: "CAUSE:\n-DEFORMED CHANNELS FROM FACTORY CAUSING ENDS TO SAG\n-CORRECTION;\n-LIFT WIRE CHANNELS AND PUSH THEM INTO SILVER TRIMS TO SECURE THEM\n-INSTALL PANHEAD SCREWS ALONG TOP TRIM TO PREVENT CHANNELS FROM FALLING OFF" },
+            { title: "SUN VISOR DAMAGED", keywords: ["SUN", "VISOR", "DAMAGED"], body: "CAUSE:\n-DAMAGED FROM FACTORY\nCORRECTION:\n-REMOVED 4 SCREWS SECURING SUN VISOR\n-REVERSE INSTALLED NEW SUN VISOR" },
+            { title: "SUN VISOR NOT OPAQUE", keywords: ["SUN", "VISOR", "OPAQUE"], body: "CAUSE:\n-FACTORY SUN VISOR NOT DARK ENOUGH\nCORRECTION:\n-REMOVED 4 SCREWS SECURING SUN VISOR\n-REVERSE INSTALLED NEW OPAQUE SUN VISOR" },
+            { title: "12V RECEPTACLE DAMAGED", keywords: ["12V", "RECEPTACLE", "DAMAGED"], body: "CAUSE:\n-DAMAGED FROM FACTORY\nCORRECTION:\n-REMOVED 2 SCREWS SECURING 12V RECEPTACLE\n-REVERSE INSTALLED NEW 12V RECEPTACLE" },
+            { title: "REFLECTIVE TAPE DAMAGED", keywords: ["REFLECTIVE", "TAPE", "DAMAGED"], body: "CAUSE:\n-DAMAGED FROM FACTORY\nCORRECTION:\n-APPLIED HEAT TO DECAL TO REMOVE WITHOUT DAMAGING PAINT\n-CLEANED AREA WITH ALCOHOL TO REMOVE RESIDUE\n-REAPPLIED #FT OF NEW TAPE AND SET TO CURE" },
+            { title: "FUEL DOOR NOT CLOSING", keywords: ["FUEL", "DOOR", "NOT CLOSING"], body: "CAUSE:\n-PLASTIC HOUSING BLOCKING HINGE FROM MOVING FREELY\nCORRECTION:\n-REMOVED 4 SCREWS SECURING DOOR\n-CLEANED AND REMOVED SEALENT\n-CUT SLIT IN PLASTIC HOUSING TO ALLOW HINGE TO MOVE FREELY\n-REVERSE INSTALLED\n-APPLIED NEW SEALENT AND SET TO CURE" },
+            { title: "REAR E WINDOW OPENS WITH VANDAL LOCK ENGAGED", keywords: ["REAR E WINDOW", "OPENS", "VANDAL LOCK ENGAGE"], body: "CAUSE:\n-SPACER IN BETWEEN HANDLE MECHANISM TOO THICK\nCORRECTION:\n-REMOVED E WINDOW HANDLE\n-REMOVED AND REPLACED SPACER WITH THINNER ONE \n-REVERSE INSTALLED\n-TESTED TO VERIFY VANDAL LOCK ENGAGES PROPERLY" },
+            { title: "RUBRAIL END CAPS RUBBING ON E DOOR", keywords: ["RUBRAIL", "END CAP", "RUBBING"], body: "CAUSE:\nRUBRAIL TOO LONG FROM FACTORY\nCORRECTION:\n-DRILLED RIVET HEAD\n-USED PUNCH TO REMOVE CENTER RIVET ROD\n-DRILLED THROUGH RIVET SHELL\n-REPEAT PROCESS FOR BOTTOM RIVET\n-REMOVED END CAP\n-REMOVED ALL SCREWS SECURING RUB RAIL\n-REMOVED RUB RAIL\n-PLACED RUB RAIL IN VICE AND USED BAND SAW TO CUT END ENOUGH TO PROVIDE CLEARANCE\n-REVERSE INSTALLED AND VERIFIED CLEARANCE" },
+            { title: "RUBBER GROMMETS CRACKING", keywords: ["RUBBER", "GROMMETS", "CRACKING"], body: "CAUSE:\n-LOW QUALITY GROMMETS FROM FACTORY\nCORRECTION:\n-REMOVED OLD GROMMETS\n-CLEANED AREA WITH ALCOHOL TO REMOVE RESIDUE\n-REVERSE INSTALLED NEW HIGHER QUALITY GROMMETS" },
+            { title: "REAR E WINDOW SHOCKS LOOSE", keywords: ["REAR E WINDOW", "SHOCKS", "LOOSE"], body: "CAUSE:\n-IMPROPER INSTALLATION FROM FACTORY\nCORRECTION:\n-REMOVED SCREWS ON ACCESS PANEL\n-TIGHTENED BACK OF SHOCK BRACKET\n-REVERSE INSTALLED PANEL\n-REPEAT PROCESS FOR OTHER SIDE" },
+            { title: "ENTRY DOOR GLASS DAMAGED", keywords: ["ENTRY DOOR", "GLASS", "DAMAGED"], body: "CAUSE:\n-DAMAGED FROM FACTORY\nCORRECTION:\n-REMOVED DOOR GLASS\n-REVERSE INSTALLED NEW DOOR GLASS" },
+            { title: "STEERING WHEEL CLAMSHELL RUBBING", keywords: ["STEERING WHEEL", "CLAMSHELL", "RUBBING"], body: "CAUSE:\n-EXCESS PLASTIC ON DASH FROM FACTORY\n-CORRECTION:\n-MARKED WHERE CLAMSHELL RUBBING\n-USED RAZOR BLADE TO SCORE AND REMOVED EXCESS PLASTIC\n-USED FILE TO SMOOTH OUT IMPERFECTIONS" },
+            { title: "WEATHER SEAL DAMAGED", keywords: ["WEATHER", "SEAL", "DAMAGED"], body: "CAUSE:\n-DAMAGED FROM FACTORY\nCORRECTION:\n-REMOVED OLD WEATHER SEAL\n-CLEANED AREA WITH ALCOHOL TO REMOVE RESIDUE\n-APPLIED NEW WEATHER SEAL AND SET TO CURE" },
+            { title: "SWRLF DECAL PEELING", keywords: ["SWRLF", "DECAL", "PEELING"], body: "CAUSE:\n-AREA NOT CLEANED BEFORE INSTALLED\nCORRECTION:\n-APPLIED HEAT TO DECAL TO REMOVE WITHOUT DAMAGING PAINT\n-CLEANED AREA WITH ALCOHOL TO REMOVE DIRT AND RESIDUE\n-MEASURED AND CENTERED DECAL\n-REAPPLIED NEW SWRLF DECAL AND SET TO CURE" },
+            { title: "ROOF HATCH MISSING SILICONE", keywords: ["ROOF HATCH", "MISSING", "SILICONE"], body: "CAUSE:\n-NOT INSTALLED FROM FACTORY\n-CORRECTION:\n-CLEANED AREA WITH ALCOHOL TO REMOVE DIRT AND RESIDUE\n-APPLIED SILICONE AROUND ROOF HATCH\n-SET TO CURE" },
+            { title: "ROOF HATCH MISSING SILICONE 2", keywords: ["ROOF HATCH", "MISSING", "SILICONE 2"], body: "CAUSE:\n-NOT INSTALLED FROM FACTORY\n-CORRECTION:\n-CLEANED AREA WITH ALCOHOL TO REMOVE DIRT AND RESIDUE\n-APPLIED SILICONE AROUND ROOF HATCH\n-SET TO CURE\n-REPEAT PROCESS FOR SECOND ROOF HATCH" }
+        ];
+
+        // DOM elements
+        const searchInput = document.getElementById('searchInput');
+        const templatesList = document.getElementById('templatesList');
+        const stats = document.getElementById('stats');
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalText = document.getElementById('modalText');
+        const copyBtn = document.getElementById('copyBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const copyNotification = document.getElementById('copyNotification');
+
+        let currentTemplate = null;
+
+        // Initialize app only if licensed
+        function initializeApp() {
+            init();
+        }
+
+        // Initialize
+        function init() {
+            renderTemplates(templates);
+            updateStats(templates.length, templates.length);
+        }
+
+        // Render templates
+        function renderTemplates(templatesToShow) {
+            if (templatesToShow.length === 0) {
+                templatesList.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <p>No templates found</p>
+                        <p style="font-size: 12px; margin-top: 5px;">Try different keywords</p>
+                    </div>
+                `;
+                return;
+            }
+
+            templatesList.innerHTML = templatesToShow.map(template => `
+                <div class="template-item" data-title="${template.title}">
+                    <div class="template-title">${template.title}</div>
+                    <div class="template-preview">${template.body.substring(0, 100)}...</div>
+                    <div class="template-keywords">
+                        ${template.keywords.slice(0, 3).map(kw => 
+                            `<span class="keyword-badge">${kw.toLowerCase()}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            // Add click listeners
+            document.querySelectorAll('.template-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const title = this.dataset.title;
+                    const template = templates.find(t => t.title === title);
+                    if (template) {
+                        showModal(template);
+                    }
+                });
+            });
+        }
+
+        // Search functionality
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            
+            if (query === '') {
+                renderTemplates(templates);
+                updateStats(templates.length, templates.length);
+                return;
+            }
+
+            const matches = templates.filter(template => {
+                const titleMatch = template.title.toLowerCase().includes(query);
+                const keywordMatch = template.keywords.some(kw => 
+                    kw.toLowerCase().includes(query)
+                );
+                const bodyMatch = template.body.toLowerCase().includes(query);
+                return titleMatch || keywordMatch || bodyMatch;
+            });
+
+            renderTemplates(matches);
+            updateStats(matches.length, templates.length);
+        });
+
+        // Update stats
+        function updateStats(showing, total) {
+            stats.textContent = `Showing ${showing} of ${total} templates`;
+        }
+
+        // Show modal
+        function showModal(template) {
+            currentTemplate = template;
+            modalTitle.textContent = template.title;
+            modalText.textContent = template.body;
+            modal.style.display = 'block';
+        }
+
+        // Close modal
+        function hideModal() {
+            modal.style.display = 'none';
+            currentTemplate = null;
+        }
+
+        // Copy to clipboard
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showCopyNotification();
+            } catch (err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showCopyNotification();
+            }
+        }
+
+        // Show copy notification
+        function showCopyNotification() {
+            copyNotification.classList.add('show');
+            setTimeout(() => {
+                copyNotification.classList.remove('show');
+            }, 2000);
+        }
+
+        // Event listeners
+        copyBtn.addEventListener('click', function() {
+            if (currentTemplate) {
+                copyToClipboard(currentTemplate.body);
+                hideModal();
+            }
+        });
+
+        closeBtn.addEventListener('click', hideModal);
+
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                hideModal();
+            }
+        });
+
+        // Initialize app
+        if (checkLicense()) {
+            initializeApp();
+        }
+    </script>
+</body>
+</html>
