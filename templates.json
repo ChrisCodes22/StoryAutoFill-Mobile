@@ -186,7 +186,7 @@
     {
       "title": "STEERING WHEEL CLAMSHELL RUBBING",
       "keywords": ["STEERING WHEEL", "CLAMSHELL", "RUBBING"],
-      "body": "CAUSE:\n-EXCESS PLASTIC ON DASH FROM FACTORY\n-CORRECTION:\n-MARKED WHERE CLAMSHELL RUBBING\n-USED RAZOR BLADE TO SCORE AND REMOVED EXCESS PLASTIC\n-USED FILE TO SMOOTH OUT IMPERFECTIONS"
+      "body": "CAUSE:\n-EXCESS PLASTIC ON DASH FROM FACTORY\nCORRECTION:\n-MARKED WHERE CLAMSHELL RUBBING\n-USED RAZOR BLADE TO SCORE AND REMOVED EXCESS PLASTIC\n-USED FILE TO SMOOTH OUT IMPERFECTIONS"
     },
     {
       "title": "WEATHER SEAL DAMAGED",
@@ -201,12 +201,72 @@
     {
       "title": "ROOF HATCH MISSING SILICONE",
       "keywords": ["ROOF HATCH", "MISSING", "SILICONE"],
-      "body": "CAUSE:\n-NOT INSTALLED FROM FACTORY\n-CORRECTION:\n-CLEANED AREA WITH ALCOHOL TO REMOVE DIRT AND RESIDUE\n-APPLIED SILICONE AROUND ROOF HATCH\n-SET TO CURE"
+      "body": "CAUSE:\n-NOT INSTALLED FROM FACTORY\nCORRECTION:\n-CLEANED AREA WITH ALCOHOL TO REMOVE DIRT AND RESIDUE\n-APPLIED SILICONE AROUND ROOF HATCH\n-SET TO CURE"
     },
     {
       "title": "ROOF HATCH MISSING SILICONE 2",
       "keywords": ["ROOF HATCH", "MISSING", "SILICONE 2"],
-      "body": "CAUSE:\n-NOT INSTALLED FROM FACTORY\n-CORRECTION:\n-CLEANED AREA WITH ALCOHOL TO REMOVE DIRT AND RESIDUE\n-APPLIED SILICONE AROUND ROOF HATCH\n-SET TO CURE\n-REPEAT PROCESS FOR SECOND ROOF HATCH"
+      "body": "CAUSE:\n-NOT INSTALLED FROM FACTORY\nCORRECTION:\n-CLEANED AREA WITH ALCOHOL TO REMOVE DIRT AND RESIDUE\n-APPLIED SILICONE AROUND ROOF HATCH\n-SET TO CURE\n-REPEAT PROCESS FOR SECOND ROOF HATCH"
+    },
+    {
+        "title": "FILLER",
+        "keywords": ["W", "w2", "w3"],
+        "body": "CAUSE:\n-EXAMPLE\nCORRECTION:\n-"
+    },
+    {
+        "title": "FILLER",
+        "keywords": ["W", "w2", "w3"],
+        "body": "CAUSE:\n-EXAMPLE\nCORRECTION:\n-"
+    },
+      {
+        "title": "FILLER",
+        "keywords": ["W", "w2", "w3"],
+        "body": "CAUSE:\n-EXAMPLE\nCORRECTION:\n-"
+    },
+      {
+        "title": "FILLER",
+        "keywords": ["W", "w2", "w3"],
+        "body": "CAUSE:\n-EXAMPLE\nCORRECTION:\n-"
+    },
+      {
+        "title": "FILLER",
+        "keywords": ["W", "w2", "w3"],
+        "body": "CAUSE:\n-EXAMPLE\nCORRECTION:\n-"
+    },
+      {
+        "title": "FILLER",
+        "keywords": ["W", "w2", "w3"],
+        "body": "CAUSE:\n-EXAMPLE\nCORRECTION:\n-"
+    },
+      {
+        "title": "FILLER",
+        "keywords": ["W", "w2", "w3"],
+        "body": "CAUSE:\n-EXAMPLE\nCORRECTION:\n-"
+    },
+      {
+        "title": "FILLER",
+        "keywords": ["W", "w2", "w3"],
+        "body": "CAUSE:\n-EXAMPLE\nCORRECTION:\n-"
+    },
+      {
+        "title": "FILLER",
+        "keywords": ["W", "w2", "w3"],
+        "body": "CAUSE:\n-EXAMPLE\nCORRECTION:\n-"
+    },
+      {
+        "title": "FILLER",
+        "keywords": ["W", "w2", "w3"],
+        "body": "CAUSE:\n-EXAMPLE\nCORRECTION:\n-"
+    },
+      {
+        "title": "FILLER",
+        "keywords": ["W", "w2", "w3"],
+        "body": "CAUSE:\n-EXAMPLE\nCORRECTION:\n-"
+    },
+      {
+        "title": "FILLER",
+        "keywords": ["W", "w2", "w3"],
+        "body": "CAUSE:\n-EXAMPLE\nCORRECTION:\n-"
     }
   ]
 }
