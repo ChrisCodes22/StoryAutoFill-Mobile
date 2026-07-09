@@ -276,8 +276,13 @@
 
         .hidden { display: none !important; }
 
+        @keyframes slideUp {
+            from { opacity: 0; transform: translate(-50%, 10px); }
+            to   { opacity: 1; transform: translate(-50%, 0); }
+        }
+
         @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after { transition: none !important; }
+            *, *::before, *::after { transition: none !important; animation: none !important; }
         }
     </style>
 </head>
@@ -635,40 +640,51 @@
             renderTemplates();
         }
 
+        function escapeHtml(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
         function renderTemplates() {
             const list = document.getElementById('templatesList');
-            
+
             if (filteredTemplates.length === 0) {
                 list.innerHTML = '<div class="empty-state">No templates found</div>';
                 return;
             }
 
-            list.innerHTML = filteredTemplates.map(template => `
-                <div class="template-item" onclick="insertTemplate('${template.title.replace(/'/g, "\\'")}')">
-                    <div class="template-title">${template.title}</div>
-                    <div class="template-preview">${template.body.substring(0, 80)}...</div>
+            // Use data-index instead of inline onclick — titles with quotes or
+            // special characters used to break the handler and made those items untappable.
+            list.innerHTML = filteredTemplates.map((template, i) => `
+                <div class="template-item" data-index="${i}" role="button" tabindex="0">
+                    <div class="template-title">${escapeHtml(template.title)}</div>
+                    <div class="template-preview">${escapeHtml(template.body.substring(0, 80))}…</div>
                 </div>
             `).join('');
         }
 
-        function insertTemplate(title) {
-            const template = templates.find(t => t.title === title);
+        // One delegated listener handles every template tap reliably
+        document.addEventListener('DOMContentLoaded', () => {
+            const list = document.getElementById('templatesList');
+            if (!list) return;
+            list.addEventListener('click', (e) => {
+                const item = e.target.closest('.template-item');
+                if (item) insertTemplate(parseInt(item.dataset.index, 10));
+            });
+        });
+
+        function insertTemplate(index) {
+            const template = filteredTemplates[index];
             if (!template) return;
 
+            // Replace, don't append — each template is a complete story, so the
+            // previous one is cleared out when a new one is inserted.
             const textarea = document.getElementById('storyText');
-            const currentValue = textarea.value;
-            
-            if (currentValue) {
-                textarea.value = currentValue + '\n\n' + template.body;
-            } else {
-                textarea.value = template.body;
-            }
+            textarea.value = template.body;
 
-            // Scroll to textarea
-            textarea.scrollIntoView({ behavior: 'smooth' });
-
-            // Show feedback
-            showNotification('✅ Template inserted!');
+            textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showNotification('✅ Template inserted');
 
             // Best-effort usage ping — never blocks the insert
             logUsage(template.title);
@@ -679,18 +695,48 @@
             document.getElementById('searchResults').textContent = filteredTemplates.length;
         }
 
-        function copyToClipboard() {
+        async function copyText(text) {
+            // Modern async Clipboard API — reliable on tablets/mobile over HTTPS
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                }
+            } catch (e) { /* fall through to legacy path */ }
+
+            // Legacy fallback for older browsers
+            try {
+                const ta = document.getElementById('storyText');
+                ta.focus();
+                ta.select();
+                ta.setSelectionRange(0, ta.value.length);
+                return document.execCommand('copy');
+            } catch (e) {
+                return false;
+            }
+        }
+
+        async function copyToClipboard() {
             const textarea = document.getElementById('storyText');
-            
-            if (!textarea.value) {
-                showNotification('⚠️ Nothing to copy');
+            const text = textarea.value;
+
+            if (!text.trim()) {
+                showNotification('⚠️ Nothing to copy yet');
                 return;
             }
 
-            textarea.select();
-            document.execCommand('copy');
-            
-            showNotification('✅ Copied to clipboard!');
+            const ok = await copyText(text);
+
+            if (ok) {
+                // Clear the story so the previous one disappears before the next copy
+                textarea.value = '';
+                showNotification('✅ Copied — ready to paste');
+            } else {
+                // Copy failed: leave the text selected so they can copy manually
+                textarea.focus();
+                textarea.select();
+                showNotification('⚠️ Press and hold to copy');
+            }
         }
 
         function showNotification(message) {
