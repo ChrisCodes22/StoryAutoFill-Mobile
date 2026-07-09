@@ -138,18 +138,20 @@
             min-height: 200px;
             padding: 14px;
             font-size: 16px;
-            border: 1px solid var(--line);
+            border: 2px solid var(--accent);
             border-radius: 10px;
             resize: vertical;
             color: var(--ink);
             line-height: 1.55;
             font-family: var(--sans);
             margin-bottom: 14px;
-            transition: border-color .15s, box-shadow .15s;
+            background: var(--accent-soft);
+            transition: border-color .15s, box-shadow .15s, background .15s;
         }
         textarea:focus {
             outline: none;
             border-color: var(--accent);
+            background: var(--surface);
             box-shadow: 0 0 0 3px var(--accent-soft);
         }
 
