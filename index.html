@@ -388,6 +388,8 @@
 
         function storeLicense(key) {
             localStorage.setItem(LICENSE_CONFIG.licenseKey, encryptKey(key));
+            _cachedUserInfo = null;
+            localStorage.removeItem(TRACKING_CONFIG.techNameKey);
         }
 
         function getStoredLicense() {
@@ -460,6 +462,108 @@
         });
 
         // ========================================
+        // USAGE TRACKING (mirrors desktop extension)
+        // ========================================
+        const TRACKING_CONFIG = {
+            endpoint: 'https://script.google.com/macros/s/AKfycbwA8DN_VtQp-UWQdUecQXgyTxAOShMgUpv53RpQfLCbkmXr-6MJ0A-69FHH6NeSSY_t/exec',
+            storageKey: 'stl_usage_count',
+            techNameKey: 'stl_tech_name',
+            fingerprintKey: 'stl_device_fingerprint'
+        };
+
+        let _cachedUserInfo = null;
+
+        function generateDeviceFingerprint() {
+            try {
+                const stored = localStorage.getItem(TRACKING_CONFIG.fingerprintKey);
+                if (stored) return stored;
+
+                const nav = window.navigator;
+                const scr = window.screen;
+                const components = [
+                    nav.userAgent,
+                    nav.language,
+                    scr.colorDepth,
+                    scr.width + 'x' + scr.height,
+                    new Date().getTimezoneOffset(),
+                    nav.hardwareConcurrency || 'unknown',
+                    nav.platform,
+                    // Stable marker so the admin portal can tell mobile from desktop
+                    // even on iPads (which report a desktop user agent). Same column
+                    // format as desktop — just an extra token inside the hash.
+                    'mobile-pwa'
+                ];
+                const fingerprint = btoa(components.join('|'));
+                localStorage.setItem(TRACKING_CONFIG.fingerprintKey, fingerprint);
+                return fingerprint;
+            } catch (e) {
+                return 'unknown';
+            }
+        }
+
+        function getUserInfo() {
+            if (_cachedUserInfo) return _cachedUserInfo;
+            const storedKey = getStoredLicense();
+            const storedName = localStorage.getItem(TRACKING_CONFIG.techNameKey);
+            const validation = storedKey ? validateLicenseKey(storedKey) : null;
+            _cachedUserInfo = {
+                key: storedKey || 'none',
+                name: storedName || (validation && validation.valid ? validation.userId : 'unknown'),
+                fingerprint: generateDeviceFingerprint() || 'unknown'
+            };
+            return _cachedUserInfo;
+        }
+
+        function logUsage(templateTitle) {
+            try {
+                // Skip only when no real endpoint is configured
+                if (!TRACKING_CONFIG.endpoint || !TRACKING_CONFIG.endpoint.startsWith('https://')) return;
+
+                const user = getUserInfo();
+
+                try {
+                    const count = parseInt(localStorage.getItem(TRACKING_CONFIG.storageKey) || '0', 10) + 1;
+                    localStorage.setItem(TRACKING_CONFIG.storageKey, String(count));
+                } catch (e) {}
+
+                // no-cors + text/plain: Apps Script answers POST with a 302 redirect,
+                // which drops the body under default fetch mode / application/json
+                fetch(TRACKING_CONFIG.endpoint, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        action: 'logUsage',
+                        licenseKey: user.key,
+                        userId: user.name,
+                        techName: user.name,
+                        template: String(templateTitle || 'unknown').substring(0, 200),
+                        timestamp: new Date().toISOString(),
+                        deviceFingerprint: user.fingerprint
+                    })
+                }).catch(() => {});
+            } catch (err) {
+                // Silent fail — tracking must never break template use
+            }
+        }
+
+        async function lookupAndStoreTechName(key) {
+            if (!TRACKING_CONFIG.endpoint || !TRACKING_CONFIG.endpoint.startsWith('https://')) return;
+            try {
+                const cleanKey = key.replace(/-/g, '').toUpperCase();
+                const resp = await fetch(TRACKING_CONFIG.endpoint + '?action=lookupByKey&key=' + encodeURIComponent(cleanKey));
+                const json = await resp.json();
+                if (json.found && json.techName) {
+                    localStorage.setItem(TRACKING_CONFIG.techNameKey, json.techName);
+                    _cachedUserInfo = null;
+                    console.log('[Story Template] Tech name retrieved:', json.techName);
+                }
+            } catch (e) {
+                console.log('[Story Template] Name lookup failed (non-critical)');
+            }
+        }
+
+        // ========================================
         // TEMPLATE SYSTEM
         // ========================================
         let templates = [];
@@ -526,9 +630,12 @@
 
             // Scroll to textarea
             textarea.scrollIntoView({ behavior: 'smooth' });
-            
+
             // Show feedback
             showNotification('✅ Template inserted!');
+
+            // Best-effort usage ping — never blocks the insert
+            logUsage(template.title);
         }
 
         function updateStats() {
@@ -587,6 +694,13 @@
         // ========================================
         function initializeApp() {
             loadTemplates();
+
+            // Fetch tech name once and cache it (covers new activations and
+            // devices activated before tracking existed)
+            if (!localStorage.getItem(TRACKING_CONFIG.techNameKey)) {
+                const storedKey = getStoredLicense();
+                if (storedKey) lookupAndStoreTechName(storedKey);
+            }
         }
 
         // Check license on load
