@@ -289,6 +289,26 @@
 
         .hidden { display: none !important; }
 
+        /* Request a story */
+        .request-link {
+            display: block; width: 100%; background: none; border: none;
+            color: var(--accent); font-weight: 600; font-size: 13.5px; font-family: var(--sans);
+            text-align: right; padding: 6px 2px 10px; cursor: pointer;
+        }
+        .request-link:active { opacity: .7; }
+        .req-textarea {
+            min-height: 110px; border: 1px solid var(--line); background: var(--surface);
+            font-size: 15px; margin-bottom: 12px;
+        }
+        .btn-ghost2 { background: var(--inset); color: var(--ink-2); margin-top: 10px; }
+        .my-requests { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; max-height: 200px; overflow-y: auto; }
+        .my-requests h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 8px; }
+        .my-req-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; color: var(--ink-2); border-bottom: 1px solid var(--inset); }
+        .my-req-row:last-child { border-bottom: none; }
+        .my-req-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--ink); }
+        .my-req-resend { background: none; border: 1px solid var(--line); border-radius: 7px; padding: 5px 10px; font-size: 12px; color: var(--accent); font-weight: 600; cursor: pointer; font-family: var(--sans); }
+        .req-note { font-size: 12px; color: var(--muted); margin-top: 12px; line-height: 1.5; }
+
         @keyframes slideUp {
             from { opacity: 0; transform: translate(-50%, 10px); }
             to   { opacity: 1; transform: translate(-50%, 0); }
@@ -342,10 +362,30 @@
                 <div class="templates-list" id="templatesList"></div>
             </div>
 
+            <button type="button" class="request-link" onclick="openRequestForm()">Can't find a template? Request a story &rarr;</button>
+
             <div class="card">
                 <div class="card-title">Your story</div>
                 <textarea id="storyText" placeholder="Tap a template above to insert it here…"></textarea>
                 <button class="btn btn-accent" onclick="copyToClipboard()">Copy to clipboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request-a-story overlay -->
+    <div id="requestOverlay" class="license-overlay hidden">
+        <div class="license-modal">
+            <h2>Request a story</h2>
+            <p class="lead">Can't find a template? Describe it and it goes straight to the admin.</p>
+            <input type="text" id="reqTitle" class="search-input" placeholder="Story title / what it's for (required)" maxlength="200" style="margin-bottom:12px;background:var(--surface);">
+            <textarea id="reqDesc" class="req-textarea" placeholder="What should the story say? (optional)" maxlength="2000"></textarea>
+            <div id="reqError" class="license-error"></div>
+            <button class="btn btn-accent" id="reqSubmitBtn" onclick="submitStoryRequest()">Submit request</button>
+            <button class="btn btn-ghost2" onclick="closeRequestForm()">Close</button>
+            <div class="my-requests" id="myRequestsWrap" style="display:none;">
+                <h3>Sent from this device</h3>
+                <div id="myRequestsList"></div>
+                <div class="req-note">Requests are saved here too. If one doesn't reach the admin (bad signal, etc.), tap Re-send.</div>
             </div>
         </div>
     </div>
@@ -444,6 +484,9 @@
             localStorage.setItem(LICENSE_CONFIG.licenseKey, encryptKey(key));
             _cachedUserInfo = null;
             localStorage.removeItem(TRACKING_CONFIG.techNameKey);
+            localStorage.removeItem(TRACKING_CONFIG.departmentKey);
+            localStorage.removeItem(TRACKING_CONFIG.locationKey);
+            localStorage.removeItem(TRACKING_CONFIG.userInfoCheckedKey);
         }
 
         function getStoredLicense() {
@@ -522,7 +565,12 @@
             endpoint: 'https://script.google.com/macros/s/AKfycbwA8DN_VtQp-UWQdUecQXgyTxAOShMgUpv53RpQfLCbkmXr-6MJ0A-69FHH6NeSSY_t/exec',
             storageKey: 'stl_usage_count',
             techNameKey: 'stl_tech_name',
-            fingerprintKey: 'stl_device_fingerprint'
+            fingerprintKey: 'stl_device_fingerprint',
+            departmentKey: 'stl_department',
+            locationKey: 'stl_location',
+            userInfoCheckedKey: 'stl_userinfo_checked_at',
+            requestsKey: 'stl_story_requests',
+            requestCountKey: 'stl_request_count'
         };
 
         let _cachedUserInfo = null;
@@ -563,7 +611,9 @@
             _cachedUserInfo = {
                 key: storedKey || 'none',
                 name: storedName || (validation && validation.valid ? validation.userId : 'unknown'),
-                fingerprint: generateDeviceFingerprint() || 'unknown'
+                fingerprint: generateDeviceFingerprint() || 'unknown',
+                department: getDepartment(),
+                location: getLocation()
             };
             return _cachedUserInfo;
         }
@@ -607,10 +657,15 @@
                 const cleanKey = key.replace(/-/g, '').toUpperCase();
                 const resp = await fetch(TRACKING_CONFIG.endpoint + '?action=lookupByKey&key=' + encodeURIComponent(cleanKey));
                 const json = await resp.json();
-                if (json.found && json.techName) {
-                    localStorage.setItem(TRACKING_CONFIG.techNameKey, json.techName);
+                if (json.found) {
+                    if (json.techName) localStorage.setItem(TRACKING_CONFIG.techNameKey, json.techName);
+                    // Server-side license attributes (legacy rows come back all/main)
+                    localStorage.setItem(TRACKING_CONFIG.departmentKey, json.department || 'all');
+                    localStorage.setItem(TRACKING_CONFIG.locationKey, json.location || 'main');
+                    localStorage.setItem(TRACKING_CONFIG.userInfoCheckedKey, String(Date.now()));
                     _cachedUserInfo = null;
-                    console.log('[Story Template] Tech name retrieved:', json.techName);
+                    console.log('[Story Template] User info retrieved:', json.techName, json.department);
+                    applyDepartmentFilter();
                 }
             } catch (e) {
                 console.log('[Story Template] Name lookup failed (non-critical)');
@@ -623,12 +678,36 @@
         let templates = [];
         let filteredTemplates = [];
 
+        function getDepartment() {
+            try { return (localStorage.getItem(TRACKING_CONFIG.departmentKey) || 'all').toLowerCase() || 'all'; }
+            catch (e) { return 'all'; }
+        }
+        function getLocation() {
+            try { return localStorage.getItem(TRACKING_CONFIG.locationKey) || 'main'; }
+            catch (e) { return 'main'; }
+        }
+        // FAIL OPEN: if anything here goes wrong, the tech sees every template.
+        // A missing template.department means "both".
+        function visibleTemplates() {
+            try {
+                const dept = getDepartment();
+                if (dept !== 'production' && dept !== 'retail') return templates;
+                return templates.filter(t => {
+                    const td = String((t && t.department) || 'both').toLowerCase();
+                    return td === 'both' || td === dept;
+                });
+            } catch (e) { return templates; }
+        }
+        function applyDepartmentFilter() {
+            try { searchTemplates(document.getElementById('searchInput').value || ''); } catch (e) {}
+        }
+
         async function loadTemplates() {
             try {
                 const response = await fetch('https://templates.bluestacklabs.software/templates.json');
                 const data = await response.json();
                 templates = data.templates;
-                filteredTemplates = templates;
+                filteredTemplates = visibleTemplates();
                 console.log('Loaded', templates.length, 'templates');
                 updateStats();
                 renderTemplates();
@@ -639,11 +718,12 @@
         }
 
         function searchTemplates(query) {
+            const base = visibleTemplates();
             if (!query) {
-                filteredTemplates = templates;
+                filteredTemplates = base;
             } else {
                 const q = query.toLowerCase();
-                filteredTemplates = templates.filter(t => 
+                filteredTemplates = base.filter(t => 
                     t.title.toLowerCase().includes(q) ||
                     t.keywords.some(k => k.toLowerCase().includes(q)) ||
                     t.body.toLowerCase().includes(q)
@@ -704,7 +784,7 @@
         }
 
         function updateStats() {
-            document.getElementById('templateCount').textContent = templates.length;
+            document.getElementById('templateCount').textContent = visibleTemplates().length;
             document.getElementById('searchResults').textContent = filteredTemplates.length;
         }
 
@@ -785,14 +865,150 @@
         });
 
         // ========================================
+        // REQUEST A STORY
+        // ========================================
+        const REQUEST_LIMIT_PER_DAY = 5;
+        const REQUEST_COOLDOWN_MS = 30 * 1000;
+        let _reqCooldownTimer = null;
+
+        function getMyRequests() {
+            try { return JSON.parse(localStorage.getItem(TRACKING_CONFIG.requestsKey) || '[]'); }
+            catch (e) { return []; }
+        }
+        function saveMyRequests(list) {
+            try { localStorage.setItem(TRACKING_CONFIG.requestsKey, JSON.stringify(list.slice(-20))); } catch (e) {}
+        }
+        function requestsToday() {
+            try {
+                const o = JSON.parse(localStorage.getItem(TRACKING_CONFIG.requestCountKey) || '{}');
+                return o.date === new Date().toISOString().split('T')[0] ? (o.count || 0) : 0;
+            } catch (e) { return 0; }
+        }
+        function bumpRequestCount() {
+            try {
+                localStorage.setItem(TRACKING_CONFIG.requestCountKey,
+                    JSON.stringify({ date: new Date().toISOString().split('T')[0], count: requestsToday() + 1 }));
+            } catch (e) {}
+        }
+        function openRequestForm() {
+            document.getElementById('requestOverlay').classList.remove('hidden');
+            renderMyRequests();
+            document.getElementById('reqTitle').focus();
+        }
+        function closeRequestForm() {
+            document.getElementById('requestOverlay').classList.add('hidden');
+        }
+        function renderMyRequests() {
+            const wrap = document.getElementById('myRequestsWrap');
+            const list = getMyRequests();
+            if (!list.length) { wrap.style.display = 'none'; return; }
+            wrap.style.display = '';
+            document.getElementById('myRequestsList').innerHTML = list.slice().reverse().map((r, i) => {
+                const idx = list.length - 1 - i;
+                const when = new Date(r.ts).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
+                return '<div class="my-req-row"><span class="my-req-title">' + escapeHtml(r.title) + '</span>' +
+                    '<span>' + when + (r.sent ? '' : ' &middot; not sent') + '</span>' +
+                    '<button type="button" class="my-req-resend" onclick="resendRequest(' + idx + ')">Re-send</button></div>';
+            }).join('');
+        }
+        function startCooldown() {
+            const btn = document.getElementById('reqSubmitBtn');
+            btn.disabled = true;
+            let left = REQUEST_COOLDOWN_MS / 1000;
+            btn.textContent = 'Submitted \u2014 wait ' + left + 's';
+            clearInterval(_reqCooldownTimer);
+            _reqCooldownTimer = setInterval(() => {
+                left--;
+                if (left <= 0) {
+                    clearInterval(_reqCooldownTimer);
+                    btn.disabled = false;
+                    btn.textContent = 'Submit request';
+                } else {
+                    btn.textContent = 'Submitted \u2014 wait ' + left + 's';
+                }
+            }, 1000);
+        }
+        function buildRequestPayload(requestId, title, description) {
+            const user = getUserInfo();
+            return {
+                action: 'storyRequest',
+                requestId: requestId,
+                title: title,
+                description: description || '',
+                techName: user.name,
+                userId: user.name,
+                licenseKey: user.key,
+                department: getDepartment(),
+                location: getLocation(),
+                client: 'mobile',
+                deviceFingerprint: user.fingerprint,
+                timestamp: new Date().toISOString()
+            };
+        }
+        async function postStoryRequest(payload) {
+            // no-cors: the response is opaque, so "sent" only means the request
+            // left this device — we never fake a server confirmation.
+            await fetch(TRACKING_CONFIG.endpoint, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(payload)
+            });
+        }
+        async function submitStoryRequest() {
+            const titleEl = document.getElementById('reqTitle');
+            const descEl = document.getElementById('reqDesc');
+            const errEl = document.getElementById('reqError');
+            errEl.style.display = 'none';
+            const title = titleEl.value.trim();
+            if (!title) {
+                errEl.textContent = 'Please add a short title first.';
+                errEl.style.display = 'block';
+                return;
+            }
+            if (requestsToday() >= REQUEST_LIMIT_PER_DAY) {
+                errEl.textContent = 'Daily limit reached (' + REQUEST_LIMIT_PER_DAY + ' requests per device). Try again tomorrow.';
+                errEl.style.display = 'block';
+                return;
+            }
+            const requestId = Date.now() + '-' + Math.floor(Math.random() * 1000000);
+            let sent = true;
+            try { await postStoryRequest(buildRequestPayload(requestId, title, descEl.value.trim())); }
+            catch (e) { sent = false; }
+            const list = getMyRequests();
+            list.push({ requestId: requestId, title: title, description: descEl.value.trim(), ts: new Date().toISOString(), sent: sent });
+            saveMyRequests(list);
+            bumpRequestCount();
+            titleEl.value = ''; descEl.value = '';
+            renderMyRequests();
+            startCooldown();
+            showNotification(sent ? '\u2705 Request submitted' : '\u26A0\uFE0F Could not send \u2014 saved on this device');
+        }
+        async function resendRequest(idx) {
+            const list = getMyRequests();
+            const r = list[idx];
+            if (!r) return;
+            let sent = true;
+            try { await postStoryRequest(buildRequestPayload(r.requestId, r.title, r.description)); }
+            catch (e) { sent = false; }
+            r.sent = sent;
+            r.ts = new Date().toISOString();
+            saveMyRequests(list);
+            renderMyRequests();
+            showNotification(sent ? '\u2705 Request re-sent' : '\u26A0\uFE0F Still could not send');
+        }
+
+        // ========================================
         // INITIALIZATION
         // ========================================
         function initializeApp() {
             loadTemplates();
 
-            // Fetch tech name once and cache it (covers new activations and
-            // devices activated before tracking existed)
-            if (!localStorage.getItem(TRACKING_CONFIG.techNameKey)) {
+            // Refresh cached user info (name/department/location) when it is
+            // missing or older than a day, so admin-side department changes
+            // propagate without re-activation. Non-blocking; filter fails open.
+            const lastChecked = parseInt(localStorage.getItem(TRACKING_CONFIG.userInfoCheckedKey) || '0', 10);
+            const isStale = (Date.now() - lastChecked) > 24 * 60 * 60 * 1000;
+            if (!localStorage.getItem(TRACKING_CONFIG.techNameKey) ||
+                !localStorage.getItem(TRACKING_CONFIG.departmentKey) || isStale) {
                 const storedKey = getStoredLicense();
                 if (storedKey) lookupAndStoreTechName(storedKey);
             }
