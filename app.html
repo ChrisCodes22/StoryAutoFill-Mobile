@@ -487,6 +487,8 @@
             localStorage.removeItem(TRACKING_CONFIG.departmentKey);
             localStorage.removeItem(TRACKING_CONFIG.locationKey);
             localStorage.removeItem(TRACKING_CONFIG.userInfoCheckedKey);
+            localStorage.removeItem(TRACKING_CONFIG.expiresOnKey);
+            localStorage.removeItem(TRACKING_CONFIG.licenseValidKey);
         }
 
         function getStoredLicense() {
@@ -496,23 +498,43 @@
 
         function checkLicense() {
             const stored = getStoredLicense();
-            
+
             if (!stored) {
                 return false;
             }
 
             const validation = validateLicenseKey(stored);
-            
-            if (!validation.valid) {
+
+            // The timestamp embedded in the key no longer governs expiry — the
+            // admin-controlled ExpiresOn does, cached from lookupByKey. Only a
+            // STRUCTURALLY invalid key (bad format) is cleared; an expired
+            // embedded date is ignored so admins can extend without new keys.
+            if (!validation.valid && !validation.expiry) {
                 localStorage.removeItem(LICENSE_CONFIG.licenseKey);
                 return false;
             }
 
-            console.log('License valid until:', validation.expiry.toLocaleDateString());
+            // Server verdict, cached locally. FAIL OPEN: no cached answer
+            // (offline, never looked up) means the tech keeps working.
+            if (localStorage.getItem(TRACKING_CONFIG.licenseValidKey) === '0') {
+                showExpiredGate();
+                return false;
+            }
+
             return true;
         }
 
-        function activateLicense() {
+        function showExpiredGate() {
+            window._stlExpiredGate = true;
+            const err = document.getElementById('licenseError');
+            err.textContent = '\u23F0 Your license has expired. Ask your admin to extend it \u2014 this device unlocks automatically once they do. (Or enter a new key below.)';
+            err.style.display = 'block';
+            // Background re-check: if the admin already extended, unlock on the spot
+            const stored = getStoredLicense();
+            if (stored) lookupAndStoreTechName(stored);
+        }
+
+        async function activateLicense() {
             const input = document.getElementById('licenseInput');
             const error = document.getElementById('licenseError');
             const key = input.value.replace(/-/g, '').toUpperCase();
@@ -524,8 +546,18 @@
                 return;
             }
 
-            const validation = validateLicenseKey(key);
-            
+            let validation = validateLicenseKey(key);
+
+            // Embedded date expired? The server's ExpiresOn is the truth now —
+            // ask it before rejecting (an extended license stays activatable).
+            if (!validation.valid && validation.expiry) {
+                try {
+                    const resp = await fetch(TRACKING_CONFIG.endpoint + '?action=lookupByKey&key=' + encodeURIComponent(key));
+                    const json = await resp.json();
+                    if (json.found && json.valid !== false) validation = { valid: true, userId: validation.userId, expiry: validation.expiry };
+                } catch (e) { /* offline — fall through to the normal error */ }
+            }
+
             if (validation.valid) {
                 storeLicense(input.value);
                 document.getElementById('licenseOverlay').style.display = 'none';
@@ -568,6 +600,8 @@
             fingerprintKey: 'stl_device_fingerprint',
             departmentKey: 'stl_department',
             locationKey: 'stl_location',
+            expiresOnKey: 'stl_expires_on',
+            licenseValidKey: 'stl_license_valid',
             userInfoCheckedKey: 'stl_userinfo_checked_at',
             requestsKey: 'stl_story_requests',
             requestCountKey: 'stl_request_count'
@@ -662,10 +696,15 @@
                     // Server-side license attributes (legacy rows come back all/main)
                     localStorage.setItem(TRACKING_CONFIG.departmentKey, json.department || 'all');
                     localStorage.setItem(TRACKING_CONFIG.locationKey, json.location || 'main');
+                    localStorage.setItem(TRACKING_CONFIG.expiresOnKey, json.expiresOn || '');
+                    // Only an explicit server "no" blocks — anything else fails open
+                    localStorage.setItem(TRACKING_CONFIG.licenseValidKey, json.valid === false ? '0' : '1');
                     localStorage.setItem(TRACKING_CONFIG.userInfoCheckedKey, String(Date.now()));
                     _cachedUserInfo = null;
-                    console.log('[Story Template] User info retrieved:', json.techName, json.department);
+                    console.log('[Story Template] User info retrieved:', json.techName, json.department, 'valid:', json.valid);
                     applyDepartmentFilter();
+                    // Expired gate showing but the admin has since extended? Unlock.
+                    if (window._stlExpiredGate && json.valid !== false) location.reload();
                 }
             } catch (e) {
                 console.log('[Story Template] Name lookup failed (non-critical)');
@@ -1008,7 +1047,8 @@
             const lastChecked = parseInt(localStorage.getItem(TRACKING_CONFIG.userInfoCheckedKey) || '0', 10);
             const isStale = (Date.now() - lastChecked) > 24 * 60 * 60 * 1000;
             if (!localStorage.getItem(TRACKING_CONFIG.techNameKey) ||
-                !localStorage.getItem(TRACKING_CONFIG.departmentKey) || isStale) {
+                !localStorage.getItem(TRACKING_CONFIG.departmentKey) ||
+                !localStorage.getItem(TRACKING_CONFIG.licenseValidKey) || isStale) {
                 const storedKey = getStoredLicense();
                 if (storedKey) lookupAndStoreTechName(storedKey);
             }
